@@ -1,0 +1,23 @@
+;FLAVOR:UltiGCode
+;TIME:6666
+;MATERIAL:6666
+;MATERIAL2:0
+;NOZZLE_DIAMETER:0.4
+;MINX:2.14748e+06
+;MINY:2.14748e+06
+;MINZ:2.14748e+06
+;MAXX:-2.14748e+06
+;MAXY:-2.14748e+06
+;MAXZ:-2.14748e+06
+
+;Generated with Cura_SteamEngine master
+M82 ;absolute extrusion mode
+
+G92 E0
+G92 E0
+G1 F1500 E-41.46608
+;LAYER_COUNT:0
+M107 P1
+
+M82 ;absolute extrusion mode
+;End of Gcode
