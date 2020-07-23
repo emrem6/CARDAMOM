@@ -1,0 +1,7 @@
+DApp/node_modules
+DApp/bin
+DApp/pkg
+DApp/src/github.com/ipfs
+PrinterApp/node_modules
+PrinterApp/archive
+PrinterApp/remix
