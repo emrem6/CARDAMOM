@@ -1,20 +1,21 @@
 const path = require('path');
-const config = require(path.join(__dirname, 'config', 'CuraConfig.json'));
+const inputFilesPath = path.join(__dirname, '../files/input/');
+const outputFilesPath = path.join(__dirname, '../files/output/');
 const { exec } = require("child_process");
 
 module.exports = {
     callCura: (fileHashSC_) => {
         return new Promise((resolve, reject) => {
-            var inputFile = __dirname.concat(config.inputPath, fileHashSC_)
-            var outputfile = __dirname.concat(config.outputPath, fileHashSC_, '.gcode')
-            const command = "cd && cd CuraEngine && /home/emre/CuraEngine/build/CuraEngine slice -v -j /home/emre/CuraEngine/definitions/ultimaker2.def.json -o " + "'" + outputfile + "'" + " -l " + inputFile+".stl";
+            var inputFile = inputFilesPath.concat(fileHashSC_);
+            var outputFile = outputFilesPath.concat(fileHashSC_, '.gcode');
+            const command = "cd && cd CuraEngine && /home/emre/CuraEngine/build/CuraEngine slice -v -j /home/emre/CuraEngine/definitions/ultimaker2.def.json -o " + "'" + outputFile + "'" + " -l " + inputFile + ".stl";
             exec(command, (error, stdout, stderr) => {
                 if (error) {
                     console.log(`error: ${error.message}`);
                     return;
                 }
                 if (stderr) {
-                 //   console.log(`stderr: ${stderr}`);
+                    //   console.log(`stderr: ${stderr}`);
                     return resolve(stderr);
                 }
                 if (stdout != undefined) {

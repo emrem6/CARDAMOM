@@ -1,6 +1,6 @@
 const path = require('path');
 const cura = require(path.join(__dirname, 'CallCura.js'));
-const config = require(path.join(__dirname, 'config', 'PrinterConfig.json'));
+const config = require(path.join(__dirname, '../config', 'PrinterConfig.json'));
 
 // get calculation elements from PrinterConfig.json
 let density = config.filament.density;
@@ -35,7 +35,7 @@ function calculatePrice(curaValues_) {
             'Electricity costs: ', electricitycosts, 'EUR', '\n',
             'Total costs: ', totalcosts, 'EUR', '\n',
             '\n',
-            'Offer price: ', offerprice.toFixed(2), 'EUR'
+            'Offer price: ', offerprice, 'EUR'
         )
         console.log('##################################################')
         return offerprice
