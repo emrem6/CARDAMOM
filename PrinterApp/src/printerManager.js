@@ -6,8 +6,8 @@ const outputFilesPath = path.join(__dirname, '../files/output/');
 const config = require('../config/PrinterConfig.json')
 let fileStream;
 let fileUrl;
-let printerUrlFileUplaod = config.printerConnectoryStuttgart + config.upload;
-let printerUrlPrint = config.printerConnectoryStuttgart + config.print;
+let printerUrlFileUplaod = config.printerConnectoryStuttgart + config.api.upload;
+let printerUrlPrint = config.printerConnectoryStuttgart + config.api.print;
 let fileName;
 //let printerUrl = "http://192.168.0.83:80"
 

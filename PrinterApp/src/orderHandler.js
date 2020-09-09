@@ -1,75 +1,69 @@
-const express = require('express');
-const app = express();
 const path = require('path');
 const printerManager = require(path.join(__dirname, 'printerManager.js'));
-const PrinterMarketplace = require(path.join(__dirname, '../../DApp/src/abis/PrinterMarketplace.json'));
+const contractABI = require(path.join(__dirname, '../contractABI.json'));
 const Web3 = require('web3');
-
-//const serverApp = require(path.join(__dirname, 'ServerApp.js'));
-
-var clientAddress;
-var orders = new Array();
-var orderList = new Array();
-
+const { setTimeout } = require('timers');
+const config = require(path.join(__dirname, '../config', 'PrinterConfig.json'));
+const contractAddress = config.contractAddress;
 let contract
-let accounts
+let start = 1;
 
 
 // initialize contract
-init()
 async function init() {
     try {
-        console.log('STARTING ORDERHANDLER...')
+        console.log('Starting Server...')
         if (typeof web3 !== 'undefined') {
-            web3 = new Web3(web3.currentProvider);
+            web3 = await new Web3(web3.currentProvider);
         } else {
-            web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:7545'));
+            //web3 = await new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/v3/c968bc8207224bbf8eff18c811b31739'));
+            web3 = await new Web3(new Web3.providers.WebsocketProvider('wss://ropsten.infura.io/ws/v3/c968bc8207224bbf8eff18c811b31739'));
         }
-        accounts = await web3.eth.getAccounts();
-        const id = await web3.eth.net.getId();
-        const networkData = PrinterMarketplace.networks[id];
+        await web3.eth.net.isListening()
+            .then(() => console.log('web3 is connected'))
+            .catch(e => console.log('Something went wrong'));
         contract = await new web3.eth.Contract(
-            PrinterMarketplace.abi,
-            networkData.address);
+            contractABI,
+            contractAddress);
     }
     catch (error) {
-        console.log('ERROR: initialization error')
+        console.log('ERROR: initialization error', error)
     }
 }
 
+init()
+// TimeOut is absoluteley necessary here because otherwise evenHandler is firing before init is done, despite the async await
+setTimeout(() => {
+    eventhandler()
+}, 3000);
 
+async function eventhandler() {
+    var event = await contract.events.OrderEvent({}, { fromBlock: 8649194, toBlock: 'latest' })
+        .on('connected', function (subscriptionId) {
+            console.log("CONNECTED TO ORDEREVENT", subscriptionId)
+            if (start == 1) {
+                start = 0;
+            }
+        })
+        .on('data', function (event) {
+            if (start != 1 && event.returnValues.provider == config.account) {
+                console.log('NEW ORDER RECEIVED: ', event)
+                processNewOrder(event.returnValues.id, event.returnValues.filehash, event.returnValues.client, event.returnValues.provider, event.returnValues.price)
+            }
+        })
+        .on('changed', function (event) {
+            console.log("EVENT REMOVED FROM THE BLOCKCHAIN", event)
+        })
+        .on('error', console.error);
+}
 
 //check orders
-async function checkOrders() {
-    console.log('#################################### SEARCHING FOR NEW ORDERS ####################################')
-    orderCount = await contract.methods.orderCount().call()
-    console.log('#################################### ', orderCount, ' ORDERS FOUND ####################################')
-    for (let i = 1; i <= orderCount; i++) {
-        orders[i] = await contract.methods.orders(i).call()
-        if (orderList.includes(orders[i].fileHash) == false && accounts.includes(orders[i].provider) == true) {
-            console.log('#################################### STARTING PRINT SERVICE  ####################################')
-            console.log('#################################### CLIENT ADRESS: ', orders[i].client, ' ####################################')
-            providerAddress = orders[i].provider;
-            clientAddress = orders[i].client;
-            orderList.push(orders[i].fileHash)
-            // console.log(orderList)
-            console.log(printerManager)
-            setTimeout(() => {
-                printerManager.sendFileToPrinter(orders[i].fileHash)
-            }, 10 * 1000);
-            setTimeout(() => {
-                printerManager.startPrinter(orders[i].fileHash)
-            }, 10);
-
-
-
-        }
-    }
-    console.log(orders)
+async function processNewOrder(_id, _fileHash, _client, _provider, _price) {
+    console.log(printerManager)
+    setTimeout(() => {
+        printerManager.sendFileToPrinter(_fileHash)
+    }, 10 * 1000);
+    setTimeout(() => {
+        printerManager.startPrinter(_fileHash)
+    }, 10 * 1000);
 }
-
-
-setInterval(() => {
-    checkOrders()
-}, 30 * 1000);
-app.listen(3003, () => console.log('orderHandler listening on port 3003!'))

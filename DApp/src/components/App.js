@@ -4,14 +4,25 @@
 //import PrinterMarketplace from '../abis/PrinterMarketplace.json'
 var React = require('react');
 var Component = React.Component;
+const reactrouter = require('react-router-dom');
+const HashRouter = reactrouter.HashRouter;
+const Route = reactrouter.Route
+const Switch = reactrouter.Switch
+
 const Web3 = require('web3');
 require('./App.css');
-const PrinterMarketplace = require('../abis/PrinterMarketplace.json')
+const contractABI = require('../abis/contractABI.json')
 
 //const EventEmitter = require('events');
 //const myEmitter = new EventEmitter();
 const ipfsClient = require('ipfs-http-client')
 const ipfs = ipfsClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' }) // leaving out the arguments will default to these values
+let contract;
+//let contractAddress;
+const contractAddress = '0x8285ed4dbfba6faa5bd9da628579239168dd2e06';
+
+const accounts = '0xd41434a7aff05F0BC72AfbE67734A1fE9c63c209'
+let web3;
 let offer
 class App extends Component {
 
@@ -25,42 +36,74 @@ class App extends Component {
     if (window.ethereum) {
       window.web3 = new Web3(window.ethereum)
       await window.ethereum.enable()
+      web3 = window.web3
+      console.log(window.web3.currentProvider)
+
     }
     else if (window.web3) {
       window.web3 = new Web3(window.web3.currentProvider)
+      console.log(window.web3.currentProvider)
+      web3 = window.web3
     }
     else {
       window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
     }
+
+
+/*     try {
+      const provider = new Web3.providers.HttpProvider("https://ropsten.infura.io/v3/c968bc8207224bbf8eff18c811b31739");
+    //const provider = new Web3.providers.HttpProvider("https://ropsten.infura.io/c968bc8207224bbf8eff18c811b31739");
+      web3 = new Web3(provider);
+      web3.eth.net.isListening()
+        .then(() => console.log('web3 is connected'))
+        .catch(e => console.log('Something went wrong'));
+    }
+    catch (error) {
+      console.log(error)
+    } */
   }
 
+
+
+
   async loadBlockchainData() {
-    const web3 = window.web3
+    
+    // console.log(web3)
+
     // Load account
-    const accounts = await web3.eth.getAccounts()
-    this.setState({ account: accounts[0] })
-    const networkId = await web3.eth.net.getId()
-    const networkData = PrinterMarketplace.networks[networkId]
-    if (networkData) {
-      const contract = web3.eth.Contract(PrinterMarketplace.abi, networkData.address)
-      this.setState({ contract })
-      /*       const fileHash = await contract.methods.get().call()
-            console.log(fileHash)
-            this.setState({ fileHash }) */
-      const offerCount = await contract.methods.offerCount().call()
-      this.setState({ offerCount })
-      // Load offers
-      for (var i = 1; i <= offerCount; i++) {
-        offer = await contract.methods.offers(i).call()
-        console.log('OFFER: ', offer)
-        this.setState({
-          offers: [...this.state.offers, offer]
-        })
-      }
-      console.log('Offers:', this.state.offers)
-    } else {
+    //const accounts = await web3.eth.getAccounts()
+    console.log(accounts)
+    this.setState({ account: accounts })
+    //const networkId = await web3.eth.net.getId()
+    //const networkData = PrinterMarketplace.networks[networkId]
+   //  contractAddress = '0x13d36db04ea386052b6e2ddf407660045220c8f5';
+    contract = new web3.eth.Contract(contractABI, contractAddress);
+    if (contract) {
+      console.log('Contract is initialized')
+      console.log(contract)
+    }
+    else {
       window.alert('Smart contract not deployed to detected network.')
     }
+    this.setState({ contract })
+    /*       const fileHash = await contract.methods.get().call()
+          console.log(fileHash)
+          this.setState({ fileHash }) */
+          console.log('CONTRACT: ', contract)
+          console.log('Methods: ', contract.methods)
+    const offerCount = await contract.methods.offerCount().call()
+    this.setState({ offerCount })
+    // Load offers
+    for (var i = 1; i <= offerCount; i++) {
+      offer = await contract.methods.offers(i).call()
+      console.log('OFFER: ', offer)
+      this.setState({
+        offers: [...this.state.offers, offer]
+      })
+    }
+    console.log('Offers:', this.state.offers)
+    console.log(await contract.methods.requestCount().call())
+
   }
   // fetch and list all offers from Smart Contract 
   /*   async listOffers() {
@@ -99,6 +142,7 @@ class App extends Component {
   }
 
   onSubmit = (event) => {
+    console.log(this.state.contract.methods)
     event.preventDefault()
     console.log("Submitting file to ipfs...")
     ipfs.add(this.state.buffer, (error, result) => {
@@ -107,9 +151,12 @@ class App extends Component {
         console.error(error)
         return
       }
-      this.state.contract.methods.setRequest(result[0].hash).send({ from: this.state.account }).then((r) => {
+      //web3.eth.sendRawTransaction({from: this.state.account, to: contractAddress})
+/*       this.state.contract.methods.setRequest(result[0].hash).send({ from: this.state.account }).then((r) => {
         return this.setState({ fileHash: result[0].hash })
-      })
+      }) */
+      contract.methods.setRequest(result[0].hash).send({from: accounts})
+
     })
   }
 
@@ -120,7 +167,8 @@ class App extends Component {
       'HASH', fileHash,
       'OWNER', offer.owner)
     console.log(fileHash)
-    this.state.contract.methods.purchaseOffer(id, offerPrice, this.state.account, offer.provider, fileHash).send({ from: this.state.account, value: offerPrice })
+    this.state.contract.methods.purchaseOffer(id, offerPrice, this.state.account, offer.provider, fileHash)
+    .send({ from: this.state.account, value: offerPrice })
       .once('receipt', (receipt) => {
         this.setState({ loading: false })
       })
@@ -162,7 +210,7 @@ class App extends Component {
                         return (
                           <tr key={key}>
                             <td scope="row">{offer.id.toString()}</td>
-                            <td>{window.web3.utils.fromWei(offer.price.toString(), 'ether')} ETH</td>
+                            <td>{web3.utils.fromWei(offer.price.toString(), 'ether')} ETH</td>
                             <td>{offer.fileHash}</td>
                             <td>{offer.client.toString()}</td>
                             <td>{offer.provider.toString()}</td>
