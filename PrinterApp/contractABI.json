@@ -87,12 +87,6 @@
 				"internalType": "address payable",
 				"name": "provider",
 				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "offerprice",
-				"type": "uint256"
 			}
 		],
 		"name": "OrderEvent",
@@ -104,11 +98,6 @@
 			{
 				"internalType": "uint256",
 				"name": "_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_orderPrice",
 				"type": "uint256"
 			},
 			{
@@ -175,6 +164,11 @@
 				"internalType": "string",
 				"name": "_fileHash",
 				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_fileName",
+				"type": "string"
 			}
 		],
 		"name": "setRequest",
@@ -196,6 +190,42 @@
 		"outputs": [],
 		"payable": true,
 		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "_client",
+				"type": "address"
+			}
+		],
+		"name": "getOffer",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "fileHash",
+				"type": "string"
+			},
+			{
+				"internalType": "address payable",
+				"name": "provider",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "price",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -228,6 +258,11 @@
 				"internalType": "uint256",
 				"name": "id",
 				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "fileName",
+				"type": "string"
 			},
 			{
 				"internalType": "string",

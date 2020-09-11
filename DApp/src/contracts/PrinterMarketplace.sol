@@ -29,15 +29,26 @@ contract PrinterMarketplace {
         address payable provider;
         bool purchased;
         string fileHash;
-
     }
+
+    event RequestEvent(
+        uint256 requestid,
+        address payable requestclient,
+        string requestfilehash
+    );
 
     function setRequest(string memory _fileHash) public {
         requestCount++;
         requests[requestCount] = Request(requestCount, msg.sender, _fileHash);
+        emit RequestEvent(requestCount, msg.sender, _fileHash);
     }
 
-    function setOffer(uint256 _offerPrice, string memory _fileHash, address payable _client, address payable _provider) public {
+    function setOffer(
+        uint256 _offerPrice,
+        string memory _fileHash,
+        address payable _client,
+        address payable _provider
+    ) public {
         offerCount++;
         offers[offerCount] = Offer(
             offerCount,
@@ -63,7 +74,14 @@ contract PrinterMarketplace {
         orderCount++;
         //fetch the offer
         // Order memory _order = Order(_id, _orderPrice, _owner, true);
-        orders[orderCount] = Order(_id, _orderPrice, _client, _provider, true, _fileHash);
+        orders[orderCount] = Order(
+            _id,
+            _orderPrice,
+            _client,
+            _provider,
+            true,
+            _fileHash
+        );
         //pay the seller by sendding them ether
         address(uint160(_provider)).transfer(msg.value);
     }

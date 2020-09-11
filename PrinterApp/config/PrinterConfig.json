@@ -17,7 +17,7 @@
         "upload": "/print_file_uploads",
         "print": "/command"
     },
-    "contractAddress": "0xcf71bbb567f03de7aeddd7df7c4c616480953e60",
+    "contractAddress": "0xb3cb874f5f1ac5df81390575ed29c14792d64fdf",
     "account": "0xa37cBae6cf61f895DfF3a969EF1B1F66d0565079",
     "privateKey": "06e69ccbffd21ff1ed56d042ae415bb16768bfaaee18b1c679a174af1bed90f9"
 }

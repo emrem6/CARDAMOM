@@ -1,7 +1,10 @@
 DApp/node_modules
 DApp/bin
 DApp/pkg
-DApp/src/github.com/ipfs
+DApp/src/github.com
+DApp/src/abis/old
+DApp/src/components/old
 PrinterApp/node_modules
 PrinterApp/archive
-PrinterApp/remix
+PrinterApp/old
+PrinterApp/src/tests
