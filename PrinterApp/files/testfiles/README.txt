@@ -1,0 +1,1 @@
+Tesla Cybertruck by wov on Thingiverse: https://www.thingiverse.com/thing:4063298

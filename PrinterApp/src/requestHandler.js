@@ -5,6 +5,7 @@ const fs = require('fs');
 const axios = require('axios');
 const Web3 = require('web3');
 const path = require('path');
+const { promises } = require('dns');
 const contractABI = require(path.join(__dirname, '../contractABI.json'));
 const config = require(path.join(__dirname, '../config', 'PrinterConfig.json'));
 const cura = require(path.join(__dirname, 'CallCura.js'));
@@ -47,65 +48,61 @@ setTimeout(() => {
 }, 3000);
 
 async function eventhandler() {
-    var event = await contract.events.InquiryEvent({}, { fromBlock: 8648597, toBlock: 'latest' })
+    //    var event = await contract.events.InquiryEvent({}, { fromBlock: 8670045, toBlock: 'latest' })
+    var event = await contract.events.InquiryEvent({}, { filter: { status: ['open'] }, toBlock: 'latest' })
         .on('connected', function (subscriptionId) {
-            console.log("CONNECTED TO REQUESTEVENT", subscriptionId)
-            if (start == 1) {
-                start = 0;
-            }
+            console.log("CONNECTED TO REQUESTEVENT - SUBSCRIPTION ID: ", subscriptionId)
         })
         .on('data', function (event) {
-            console.log('NEW REQUEST RECEIVED: ', event)
-            if (start != 1) {
+            if (event.returnValues.status = 'open') {
+                console.log('NEW INQUIRY RECEIVED: ', event.returnValues)
                 processNewRequest(event.returnValues.id, event.returnValues.client, event.returnValues.filehash)
             }
         })
-/*         .on('changed', function (event) {
-            console.log("EVENT REMOVED FROM THE BLOCKCHAIN", event)
-        }) */
+        /*         .on('changed', function (event) {
+                    console.log("EVENT REMOVED FROM THE BLOCKCHAIN", event)
+                }) */
         .on('error', console.error);
 }
 async function processNewRequest(_id, _client, _filehash) {
     try {
         console.log('STARTING REQUEST HANDLING PROCESS')
-        // 1. Get file from IPFS
-        axios({
-            method: 'get',
-            url: 'https://gateway.ipfs.io./ipfs/' + _filehash,
-            responseType: 'stream'
+        let promise1 = Promise.resolve(
+            // 1. Get file from IPFS
+            await axios({
+                method: 'get',
+                url: 'https://gateway.ipfs.io./ipfs/' + _filehash,
+                responseType: 'stream'
+            })
+                .then(async function (response, error) {
+                    if (error) {
+                        console.error(error);
+                        return;
+                    }
+                    await response.data.pipe(fs.createWriteStream('../files/input/' + _filehash + '.stl'))
+                }));
+        Promise.all([promise1]).then(async (responses) => {
+            setTimeout(async() => {
+                curaValues = await cura.callCura(_filehash)
+                console.log(curaValues)
+                // 3. calculate offer price
+                offerPrice = await priceCalculation.calculatePrice(curaValues)
+                console.log('OFFERPRICE: ', offerPrice)
+                // 4. convert offerprice from € into ETH
+                const exchangeRate = await exchangeEURinETH.exchangeEURinETH()
+                console.log('EXCHANGE RATE: ', exchangeRate)
+                let offerPriceETH = offerPrice / parseFloat(exchangeRate)
+                console.log('OFFERPRICE IN ETH: ', offerPriceETH)
+                offerPriceETH = offerPriceETH.toString();
+                const decimalPlaces = offerPriceETH.split(".")[1].length
+                console.log('DECIMALPLACES: ', decimalPlaces)
+
+                console.log("BALANCE: ", await web3.eth.getBalance(account));
+                // 4. transact offerprice into smart contract
+                offerQuotation.sendTransaction(_id, offerPriceETH, _filehash, contract, _client, web3)
+            }, 3000);
+
         })
-            .then(function (response, error) {
-                if (error) {
-                    console.error(error);
-                    return;
-                }
-                response.data.pipe(fs.createWriteStream('../files/input/' + _filehash + '.stl'))
-            });
-        // 2. determine printtime and filament usage
-        curaValues = await cura.callCura(_filehash);
-        console.log(curaValues);
-        // 3. calculate offer price
-        offerPrice = await priceCalculation.calculatePrice(curaValues)
-        console.log('OFFERPRICE: ', offerPrice)
-        // 4. convert offerprice from € into ETH
-        const exchangeRate = await exchangeEURinETH.exchangeEURinETH()
-        console.log('EXCHANGE RATE: ', exchangeRate)
-        let offerPriceETH = offerPrice / parseFloat(exchangeRate)
-        console.log('OFFERPRICE IN ETH: ', offerPriceETH)
-        offerPriceETH = offerPriceETH.toString();
-        const decimalPlaces = offerPriceETH.split(".")[1].length
-        console.log('DECIMALPLACES: ', decimalPlaces)
-        // conversion toWei requires exactly 18 or less after commaplaces, this is to be checked
-/*         if (decimalPlaces > 18) {
-            offerPriceETH = offerPriceETH.slice(0, parseInt(offerPriceETH.indexOf('.')) + 19)
-            console.log('OFFERPRICE IN ETH (prepared): ', offerPriceETH)
-        }
-        const offerPriceWEI = await web3.utils.toWei(offerPriceETH, 'Ether')
-        console.log('OFFERPRICE IN WEI', offerPriceWEI) */
-        console.log("BALANCE: ", await web3.eth.getBalance(account));
-        // 4. transact offerprice into smart contract
-       // offerQuotation.sendTransaction(_id, parseInt(offerPriceWEI), _filehash, contract, _client, web3)
-       offerQuotation.sendTransaction(_id, offerPriceETH, _filehash, contract, _client, web3)
     }
     catch (error) {
         console.error(error)

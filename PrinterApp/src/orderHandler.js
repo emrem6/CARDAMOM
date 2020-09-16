@@ -38,16 +38,14 @@ setTimeout(() => {
 }, 3000);
 
 async function eventhandler() {
-    var event = await contract.events.OrderEvent({}, { fromBlock: 8649194, toBlock: 'latest' })
+    var event = await contract.events.OrderEvent({}, { filter: { status: ['purchased'] }, toBlock: 'latest' })
         .on('connected', function (subscriptionId) {
             console.log("CONNECTED TO ORDEREVENT", subscriptionId)
-            if (start == 1) {
-                start = 0;
-            }
         })
         .on('data', function (event) {
-            if (start != 1 && event.returnValues.provider == config.account) {
-                console.log('NEW ORDER RECEIVED: ', event)
+            console.log(event.returnValues.status)
+            if (event.returnValues.status == 'purchased' && event.returnValues.provider == config.account) {
+                console.log('NEW ORDER RECEIVED: ', event.returnValues)
                 processNewOrder(event.returnValues.id, event.returnValues.filehash, event.returnValues.client, event.returnValues.provider, event.returnValues.price)
             }
         })

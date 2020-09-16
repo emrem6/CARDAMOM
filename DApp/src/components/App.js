@@ -5,7 +5,6 @@
 import logobosch from '../assets/img/bosch.png';
 import logoconnectory from '../assets/img/connectory.png';
 import iconETH from '../assets/img/eth.png';
-import iconEUR from '../assets/img/eur.png';
 
 var React = require('react');
 var bootstrap = require('react-bootstrap');
@@ -77,7 +76,6 @@ class App extends Component {
   }
   async loadBlockchainData() {
 
-    // console.log(web3)
 
     // Load account
     const accounts = await web3.eth.getAccounts()
@@ -85,9 +83,7 @@ class App extends Component {
     this.setState({ account: accounts[0] })
     console.log(this.state.account)
 
-    //const networkId = await web3.eth.net.getId()
-    //const networkData = PrinterMarketplace.networks[networkId]
-    //  contractAddress = '0x13d36db04ea386052b6e2ddf407660045220c8f5';
+  
     contract = new web3.eth.Contract(contractABI, contractAddress);
     if (contract) {
       console.log('Contract is initialized')
@@ -184,26 +180,31 @@ class App extends Component {
       'HASH', fileHash,
       'OWNER', offer.owner)
     console.log(fileHash)
-    this.state.contract.methods.purchaseOffer(id, this.state.account, offer.provider, fileHash)
+    this.state.contract.methods.deposit(id, this.state.account, offer.provider, fileHash)
       .send({ from: this.state.account, value: offerPriceWEI })
       .once('receipt', (receipt) => {
         this.setState({ loading: false })
       })
   }
   // once client has received the print he can accept the reception in order to release the transfer of money from escrow to provider 
-  acceptReception(id, offerPrice) {
-    const decimalPlaces = offerPrice.split(".")[1].length
-    if (decimalPlaces > 18) {
-      offerPrice = offerPrice.slice(0, parseInt(offerPrice.indexOf('.')) + 19)
-      console.log('OFFERPRICE IN ETH (prepared): ', offerPrice)
-    }
-    const offerPriceWEI = web3.utils.toWei(offerPrice, 'Ether')
-    this.state.contract.methods.transferMoney(id)
-      .send({ from: this.state.account, value: offerPriceWEI })
-      .once('receipt', (receipt) => {
-        this.setState({ loading: false })
-      })
+  acceptReception(id) {
+    console.log('ID', id)
+    this.state.contract.methods.withdraw(id).send({ from: this.state.account, gas: 300000 })
   }
+  
+  /*   acceptReception(id, offerPrice) {
+      const decimalPlaces = offerPrice.split(".")[1].length
+      if (decimalPlaces > 18) {
+        offerPrice = offerPrice.slice(0, parseInt(offerPrice.indexOf('.')) + 19)
+        console.log('OFFERPRICE IN ETH (prepared): ', offerPrice)
+      }
+      const offerPriceWEI = web3.utils.toWei(offerPrice, 'Ether')
+      this.state.contract.methods.transferMoney(id)
+        .send({ from: this.state.account, value: offerPriceWEI })
+        .once('receipt', (receipt) => {
+          this.setState({ loading: false })
+        })
+    } */
   //                             <td>{web3.utils.fromWei(offer.price.toString(), 'ether')} ETH</td>
 
   render() {

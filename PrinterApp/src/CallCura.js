@@ -9,6 +9,7 @@ module.exports = {
             var inputFile = inputFilesPath.concat(fileHashSC_);
             var outputFile = outputFilesPath.concat(fileHashSC_, '.gcode');
             const command = "cd && cd CuraEngine && /home/emre/CuraEngine/build/CuraEngine slice -v -j /home/emre/CuraEngine/definitions/ultimaker2.def.json -o " + "'" + outputFile + "'" + " -l " + inputFile + ".stl";
+            console.log(command)
             exec(command, (error, stdout, stderr) => {
                 if (error) {
                     console.log(`error: ${error.message}`);

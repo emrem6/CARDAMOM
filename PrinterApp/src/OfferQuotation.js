@@ -30,7 +30,7 @@ async function sendTransaction(_requestid, _offerprice, _fileHash, _contract, _c
         if (err)
             console.log('ERROR:', err)
         else
-            console.log('HASH', hash)
+            console.log('TRANSACTION RECORDED WITH TXN HASH: ', hash, ' WAITING FOR RECEIPT')
     })
         .on('receipt', console.log);
     console.log('OFFER SUCCESSFULLY WRITTEN IN CONTRACT')
