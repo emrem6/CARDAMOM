@@ -1,3 +1,8 @@
+/* this script is handling the orders created via the marketplace DApp and emitted in the Smart Contract
+first it connects to ropsten web3 provider
+second it listens to order events emitted in the smart contract
+third it processes the incoming order event while sending via REST the gcode file to the printer and giving the command to start print 
+ */
 const path = require('path');
 const printerManager = require(path.join(__dirname, 'printerManager.js'));
 const contractABI = require(path.join(__dirname, '../contractABI.json'));
@@ -6,8 +11,6 @@ const { setTimeout } = require('timers');
 const config = require(path.join(__dirname, '../config', 'PrinterConfig.json'));
 const contractAddress = config.contractAddress;
 let contract
-let start = 1;
-
 
 // initialize contract
 async function init() {
@@ -16,7 +19,6 @@ async function init() {
         if (typeof web3 !== 'undefined') {
             web3 = await new Web3(web3.currentProvider);
         } else {
-            //web3 = await new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/v3/c968bc8207224bbf8eff18c811b31739'));
             web3 = await new Web3(new Web3.providers.WebsocketProvider('wss://ropsten.infura.io/ws/v3/c968bc8207224bbf8eff18c811b31739'));
         }
         await web3.eth.net.isListening()
@@ -35,7 +37,7 @@ init()
 // TimeOut is absoluteley necessary here because otherwise evenHandler is firing before init is done, despite the async await
 setTimeout(() => {
     eventhandler()
-}, 3000);
+}, 10 * 1000);
 
 async function eventhandler() {
     var event = await contract.events.OrderEvent({}, { filter: { status: ['purchased'] }, toBlock: 'latest' })
@@ -44,9 +46,10 @@ async function eventhandler() {
         })
         .on('data', function (event) {
             console.log(event.returnValues.status)
-            if (event.returnValues.status == 'purchased' && event.returnValues.provider == config.account) {
+            if (event.returnValues.status == 'purchased' &&
+                event.returnValues.provider == config.account) {
                 console.log('NEW ORDER RECEIVED: ', event.returnValues)
-                processNewOrder(event.returnValues.id, event.returnValues.filehash, event.returnValues.client, event.returnValues.provider, event.returnValues.price)
+                processNewOrder(event.returnValues.filehash)
             }
         })
         .on('changed', function (event) {
@@ -55,8 +58,7 @@ async function eventhandler() {
         .on('error', console.error);
 }
 
-//check orders
-async function processNewOrder(_id, _fileHash, _client, _provider, _price) {
+async function processNewOrder(_fileHash) {
     console.log(printerManager)
     setTimeout(() => {
         printerManager.sendFileToPrinter(_fileHash)

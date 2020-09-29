@@ -47,5 +47,3 @@ async function startPrinter(_fileHash) {
 module.exports = {
     sendFileToPrinter, startPrinter
 };
-
-

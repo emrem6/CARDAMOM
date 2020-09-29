@@ -1,11 +1,12 @@
-//l
-//"contractAddress": "0x8285ed4dbfba6faa5bd9da628579239168dd2e06",
-//"contractAddress": "0x8d655523437352bbe5b73cc5812a255d9f993091",
+/* this script is handling the requests created via the marketplace DApp and emitted in the Smart Contract
+first it connects to ropsten web3 provider
+second it listens to inquiry events emitted in the smart contract
+third it processes the incoming event  
+ */
 const fs = require('fs');
 const axios = require('axios');
 const Web3 = require('web3');
 const path = require('path');
-const { promises } = require('dns');
 const contractABI = require(path.join(__dirname, '../contractABI.json'));
 const config = require(path.join(__dirname, '../config', 'PrinterConfig.json'));
 const cura = require(path.join(__dirname, 'CallCura.js'));
@@ -17,7 +18,6 @@ const contractAddress = config.contractAddress;
 var offerPrice;
 var curaValues;
 var web3;
-let start = 1;
 let contract;
 
 async function init() {
@@ -26,7 +26,6 @@ async function init() {
         if (typeof web3 !== 'undefined') {
             web3 = await new Web3(web3.currentProvider);
         } else {
-            //web3 = await new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/v3/c968bc8207224bbf8eff18c811b31739'));
             web3 = await new Web3(new Web3.providers.WebsocketProvider('wss://ropsten.infura.io/ws/v3/c968bc8207224bbf8eff18c811b31739'));
         }
         await web3.eth.net.isListening()
@@ -42,10 +41,10 @@ async function init() {
 }
 // in order to build the app, init() must be called to run the constructor function 
 init();
-// TimeOut is absoluteley necessary here because otherwise evenHandler is firing before init is done, despite the async await
+// TimeOut is absoluteley necessary here because otherwise evenHandler is triggering before init is done, despite the async await
 setTimeout(() => {
     eventhandler()
-}, 3000);
+}, 10 * 1000);
 
 async function eventhandler() {
     //    var event = await contract.events.InquiryEvent({}, { fromBlock: 8670045, toBlock: 'latest' })
@@ -59,9 +58,6 @@ async function eventhandler() {
                 processNewRequest(event.returnValues.id, event.returnValues.client, event.returnValues.filehash)
             }
         })
-        /*         .on('changed', function (event) {
-                    console.log("EVENT REMOVED FROM THE BLOCKCHAIN", event)
-                }) */
         .on('error', console.error);
 }
 async function processNewRequest(_id, _client, _filehash) {
@@ -96,12 +92,10 @@ async function processNewRequest(_id, _client, _filehash) {
                 offerPriceETH = offerPriceETH.toString();
                 const decimalPlaces = offerPriceETH.split(".")[1].length
                 console.log('DECIMALPLACES: ', decimalPlaces)
-
                 console.log("BALANCE: ", await web3.eth.getBalance(account));
                 // 4. transact offerprice into smart contract
                 offerQuotation.sendTransaction(_id, offerPriceETH, _filehash, contract, _client, web3)
             }, 3000);
-
         })
     }
     catch (error) {
