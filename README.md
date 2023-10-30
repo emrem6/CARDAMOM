@@ -1,20 +1,37 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# CARDAMOM - Ethereum-Based Marketplace
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+CARDAMOM is a blockchain-based marketplace web app that utilizes a Smart Contract developed on the Ethereum platform to enable secure and transparent transactions.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## Table of Contents
+- [About CARDAMOM](#about-cardamom)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## About CARDAMOM
+CARDAMOM is a decentralized marketplace that leverages the power of Ethereum's blockchain technology. It offers a secure and transparent environment for users to offer 3D printing services, facilitated by a Smart Contract. The project aims to provide a trustless and censorship-resistant marketplace for various use cases.
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Getting Started
+To get started with CARDAMOM, follow the instructions below.
+
+### Prerequisites
+- MetaMask or another Ethereum wallet
+- Node.js and npm installed
+- Truffle framework (for development and deployment)
+
+### Installation
+1. Clone the repository.
+   ```bash
+   git clone https://github.com/emrem6/CARDAMOM.git
+   cd CARDAMOM
+
+npm install
+
+truffle compile
+truffle migrate
+
+npm start
