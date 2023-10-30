@@ -20,7 +20,6 @@ To get started with CARDAMOM, follow the instructions below.
 - Truffle framework (for development and deployment)
 
 ### Installation
-1. Clone the repository.
    ```bash
    git clone https://github.com/emrem6/CARDAMOM.git
    cd CARDAMOM
